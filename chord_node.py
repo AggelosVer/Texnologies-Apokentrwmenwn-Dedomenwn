@@ -1,9 +1,8 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 from dht_hash import DHTHasher
 
 class ChordNode:
     def __init__(self, ip: str, port: int, m_bits: int = 160):
-
         self.ip = ip
         self.port = port
         self.address = f"{ip}:{port}"
@@ -13,10 +12,8 @@ class ChordNode:
         self.successor: 'ChordNode' = self
         self.predecessor: Optional['ChordNode'] = None
         self.finger_table: List['ChordNode'] = [self] * self.m_bits
-        self.next_finger = 0  # Track next finger to fix (round-robin)
+        self.next_finger = 0
         self.data = {}
-        
-        print(f"[Node Init] Created Node at {self.address} with ID {self.hasher.get_hex_id(self.id)}")
 
     def __repr__(self):
         return f"<ChordNode {self.address} ID:{self.hasher.get_hex_id(self.id)[:8]}...>"
@@ -47,81 +44,186 @@ class ChordNode:
         return self
 
     def init_finger_table(self, verbose: bool = False):
-
-        if verbose:
-            print(f"\n[Finger Init] Initializing finger table for {self.address}...")
-        
         for i in range(self.m_bits):
-
             start = (self.id + (2 ** i)) % (2 ** self.m_bits)
-            
-
             self.finger_table[i] = self.find_successor(start)
-            
-
             if i == 0:
                 self.successor = self.finger_table[0]
-            
-            if verbose:
-                print(f"  Finger[{i}] start={self.hasher.get_hex_id(start)[:8]}... -> {self.finger_table[i].address}")
-        
-        if verbose:
-            print(f"[Finger Init] Finger table initialization complete.\n")
     
     def create_ring(self):
         self.predecessor = None
         self.successor = self
         self.finger_table = [self] * self.m_bits
-        print(f"[Ring Ops] {self.address} created a new ring.")
 
-    def join(self, introducer: 'ChordNode', init_fingers: bool = True):
-
-        if introducer:
-            self.predecessor = None
-            try:
-                self.successor = introducer.find_successor(self.id)
-                self.finger_table[0] = self.successor
-
-                print(f"[Ring Ops] {self.address} joining ring via {introducer.address}. Successor set to {self.successor.address}.")
-                
-
-                if init_fingers:
-                    self.init_finger_table()
-            except Exception as e:
-                print(f"[Error] Could not join ring via {introducer.address}: {e}")
-                self.create_ring()
-        else:
+    def join(self, introducer: Optional['ChordNode'] = None, init_fingers: bool = True, transfer_data: bool = True):
+        if introducer is None:
             self.create_ring()
+            return
+        
+        self.predecessor = None
+        
+        try:
+            self.successor = introducer.find_successor(self.id)
+            self.finger_table[0] = self.successor
+            
+            if self.successor is not self:
+                self.successor.notify(self)
+                if transfer_data:
+                    self._transfer_data_from_successor()
+            
+            if init_fingers:
+                self.init_finger_table()
+        except Exception:
+            self.create_ring()
+    
+    def _transfer_data_from_successor(self):
+        if self.successor is None or self.successor is self:
+            return
+        
+        if self.predecessor is None:
+            keys_to_transfer = dict(self.successor.data)
+        else:
+            keys_to_transfer = self.successor._get_keys_for_range(self.predecessor.id, self.id)
+        
+        for key, value in keys_to_transfer.items():
+            self.data[key] = value
+            if key in self.successor.data:
+                del self.successor.data[key]
 
     def stabilize(self):
-        x = self.successor.predecessor
+        if self.successor is None or self.successor is self:
+            return
         
-        if x and self.hasher.in_range(x.id, self.id, self.successor.id, inclusive_start=False, inclusive_end=False):
-            self.successor = x
-            self.finger_table[0] = x
-        
-        self.successor.notify(self)
+        try:
+            x = self.successor.predecessor
+            if x and x is not self and \
+               self.hasher.in_range(x.id, self.id, self.successor.id, 
+                                   inclusive_start=False, inclusive_end=False):
+                self.update_successor(x)
+            self.successor.notify(self)
+        except AttributeError:
+            self.successor.notify(self)
 
     def notify(self, node: 'ChordNode'):
+        if node is None or node is self:
+            return
+        
         if (self.predecessor is None) or \
-           self.hasher.in_range(node.id, self.predecessor.id, self.id, inclusive_start=False, inclusive_end=False):
-
+           (self.predecessor is not node and 
+            self.hasher.in_range(node.id, self.predecessor.id, self.id, 
+                                inclusive_start=False, inclusive_end=False)):
+            old_predecessor = self.predecessor
             self.predecessor = node
+            if old_predecessor is not None:
+                self._transfer_data_to_predecessor(node, old_predecessor)
+            self._redistribute_keys()
 
     def fix_fingers(self, verbose: bool = False):
-
         start = (self.id + (2 ** self.next_finger)) % (2 ** self.m_bits)
-        
-
-        old_finger = self.finger_table[self.next_finger]
         self.finger_table[self.next_finger] = self.find_successor(start)
-        
-
         if self.next_finger == 0:
             self.successor = self.finger_table[0]
-        
-        if verbose:
-            print(f"[Fix Finger] {self.address} fixed finger[{self.next_finger}]: {old_finger.address} -> {self.finger_table[self.next_finger].address}")
-        
-
         self.next_finger = (self.next_finger + 1) % self.m_bits
+    
+    def leave(self, transfer_data: bool = True):
+        if self.successor is self:
+            return
+        
+        if transfer_data and self.successor:
+            self._transfer_data_to_successor()
+        
+        if self.predecessor and self.predecessor is not self:
+            self.predecessor.successor = self.successor
+            self.predecessor.finger_table[0] = self.successor
+        
+        if self.successor and self.successor is not self:
+            if self.successor.predecessor is self:
+                self.successor.predecessor = self.predecessor if self.predecessor is not self else None
+        
+        self.predecessor = None
+        self.successor = self
+        self.finger_table = [self] * self.m_bits
+        self.data.clear()
+    
+    def _transfer_data_to_successor(self):
+        if self.successor is None or self.successor is self:
+            return
+        
+        for key, value in self.data.items():
+            self.successor.data[key] = value
+    
+    def _transfer_data_to_predecessor(self, new_predecessor: 'ChordNode', old_predecessor: Optional['ChordNode'] = None):
+        if new_predecessor is None or new_predecessor is self:
+            return
+        
+        if old_predecessor is None:
+            old_predecessor_id = None
+        else:
+            old_predecessor_id = old_predecessor.id
+        
+        if old_predecessor_id is None:
+            keys_to_transfer = self._get_keys_for_range(new_predecessor.id, self.id)
+        else:
+            keys_to_transfer = self._get_keys_for_range(new_predecessor.id, old_predecessor_id)
+        
+        for key, value in keys_to_transfer.items():
+            new_predecessor.data[key] = value
+            if key in self.data:
+                del self.data[key]
+    
+    def update_successor(self, new_successor: 'ChordNode'):
+        if new_successor is None:
+            return
+        self.successor = new_successor
+        self.finger_table[0] = new_successor
+    
+    def update_predecessor(self, new_predecessor: Optional['ChordNode']):
+        self.predecessor = new_predecessor
+    
+    def insert(self, key: str, value) -> bool:
+        key_id = self.hasher.hash_key(key)
+        responsible_node = self.find_successor(key_id)
+        responsible_node.data[key] = value
+        return True
+    
+    def lookup(self, key: str):
+        key_id = self.hasher.hash_key(key)
+        responsible_node = self.find_successor(key_id)
+        return responsible_node.data.get(key)
+    
+    def delete(self, key: str) -> bool:
+        key_id = self.hasher.hash_key(key)
+        responsible_node = self.find_successor(key_id)
+        if key in responsible_node.data:
+            del responsible_node.data[key]
+            return True
+        return False
+    
+    def _redistribute_keys(self):
+        if self.predecessor is None:
+            return
+        
+        keys_to_redistribute = []
+        
+        for key, value in list(self.data.items()):
+            key_id = self.hasher.hash_key(key)
+            if not self.hasher.in_range(key_id, self.predecessor.id, self.id, 
+                                       inclusive_start=False, inclusive_end=True):
+                keys_to_redistribute.append((key, value))
+        
+        for key, value in keys_to_redistribute:
+            if key in self.data:
+                del self.data[key]
+            key_id = self.hasher.hash_key(key)
+            new_responsible = self.find_successor(key_id)
+            if key not in new_responsible.data:
+                new_responsible.data[key] = value
+    
+    def _get_keys_for_range(self, start_id: int, end_id: int) -> dict:
+        keys_in_range = {}
+        for key, value in self.data.items():
+            key_id = self.hasher.hash_key(key)
+            if self.hasher.in_range(key_id, start_id, end_id, 
+                                   inclusive_start=False, inclusive_end=True):
+                keys_in_range[key] = value
+        return keys_in_range
