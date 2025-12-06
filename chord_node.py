@@ -13,6 +13,7 @@ class ChordNode:
         self.successor: 'ChordNode' = self
         self.predecessor: Optional['ChordNode'] = None
         self.finger_table: List['ChordNode'] = [self] * self.m_bits
+        self.next_finger = 0  # Track next finger to fix (round-robin)
         self.data = {}
         
         print(f"[Node Init] Created Node at {self.address} with ID {self.hasher.get_hex_id(self.id)}")
@@ -45,13 +46,36 @@ class ChordNode:
                 return finger_node
         return self
 
+    def init_finger_table(self, verbose: bool = False):
+
+        if verbose:
+            print(f"\n[Finger Init] Initializing finger table for {self.address}...")
+        
+        for i in range(self.m_bits):
+
+            start = (self.id + (2 ** i)) % (2 ** self.m_bits)
+            
+
+            self.finger_table[i] = self.find_successor(start)
+            
+
+            if i == 0:
+                self.successor = self.finger_table[0]
+            
+            if verbose:
+                print(f"  Finger[{i}] start={self.hasher.get_hex_id(start)[:8]}... -> {self.finger_table[i].address}")
+        
+        if verbose:
+            print(f"[Finger Init] Finger table initialization complete.\n")
+    
     def create_ring(self):
         self.predecessor = None
         self.successor = self
         self.finger_table = [self] * self.m_bits
         print(f"[Ring Ops] {self.address} created a new ring.")
 
-    def join(self, introducer: 'ChordNode'):
+    def join(self, introducer: 'ChordNode', init_fingers: bool = True):
+
         if introducer:
             self.predecessor = None
             try:
@@ -59,6 +83,10 @@ class ChordNode:
                 self.finger_table[0] = self.successor
 
                 print(f"[Ring Ops] {self.address} joining ring via {introducer.address}. Successor set to {self.successor.address}.")
+                
+
+                if init_fingers:
+                    self.init_finger_table()
             except Exception as e:
                 print(f"[Error] Could not join ring via {introducer.address}: {e}")
                 self.create_ring()
@@ -80,8 +108,20 @@ class ChordNode:
 
             self.predecessor = node
 
-    def fix_fingers(self):
-        import random
-        i = random.randint(1, self.m_bits - 1)
-        start = (self.id + (2**i)) % (2**self.m_bits)
-        self.finger_table[i] = self.find_successor(start)
+    def fix_fingers(self, verbose: bool = False):
+
+        start = (self.id + (2 ** self.next_finger)) % (2 ** self.m_bits)
+        
+
+        old_finger = self.finger_table[self.next_finger]
+        self.finger_table[self.next_finger] = self.find_successor(start)
+        
+
+        if self.next_finger == 0:
+            self.successor = self.finger_table[0]
+        
+        if verbose:
+            print(f"[Fix Finger] {self.address} fixed finger[{self.next_finger}]: {old_finger.address} -> {self.finger_table[self.next_finger].address}")
+        
+
+        self.next_finger = (self.next_finger + 1) % self.m_bits
