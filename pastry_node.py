@@ -156,28 +156,20 @@ class PastryNode:
                 if next_node.id not in visited:
                     return next_node.route(key_id, hops + 1, visited)
             
-            for digit in range(next_digit + 1, self.base):
+            for digit in range(self.base):
                 if shared_prefix in self.routing_table and digit in self.routing_table[shared_prefix]:
                     candidate = self.routing_table[shared_prefix][digit]
                     if candidate.id not in visited:
-                        candidate_prefix = self._shared_prefix_length(candidate.hex_id)
-                        if candidate_prefix >= shared_prefix:
-                            return candidate.route(key_id, hops + 1, visited)
-            
-            for digit in range(next_digit - 1, -1, -1):
-                if shared_prefix in self.routing_table and digit in self.routing_table[shared_prefix]:
-                    candidate = self.routing_table[shared_prefix][digit]
-                    if candidate.id not in visited:
-                        candidate_prefix = self._shared_prefix_length(candidate.hex_id)
-                        if candidate_prefix >= shared_prefix:
+                        candidate_key_prefix = self._shared_prefix_length_between(candidate.hex_id, key_hex)
+                        if candidate_key_prefix > shared_prefix:
                             return candidate.route(key_id, hops + 1, visited)
         
         for row_idx in range(shared_prefix + 1, self.num_rows):
             if row_idx in self.routing_table:
                 for digit, node in self.routing_table[row_idx].items():
                     if node.id not in visited:
-                        node_prefix = self._shared_prefix_length(node.hex_id)
-                        if node_prefix > shared_prefix:
+                        node_key_prefix = self._shared_prefix_length_between(node.hex_id, key_hex)
+                        if node_key_prefix > shared_prefix:
                             return node.route(key_id, hops + 1, visited)
         
         closest_leaf = self.find_closest_in_leaf_set(key_id)
