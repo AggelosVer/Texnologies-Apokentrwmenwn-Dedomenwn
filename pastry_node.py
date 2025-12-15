@@ -73,7 +73,6 @@ class PastryNode:
                     self.leaf_larger = self.leaf_larger[:self.leaf_set_size // 2]
 
     def _update_routing_table(self, node: 'PastryNode'):
-        """Updates the routing table with a new node."""
         sh_len = self._shared_prefix_length(node.hex_id)
         
 
@@ -109,7 +108,6 @@ class PastryNode:
         min_id = self.leaf_smaller[0].id if self.leaf_smaller else self.id
         max_id = self.leaf_larger[-1].id if self.leaf_larger else self.id
         
-        # Handle wrap-around
         if min_id <= max_id:
             return min_id <= key_id <= max_id
         else:
@@ -263,9 +261,6 @@ class PastryNode:
                 del node.data[key]
 
     def leave(self, transfer_data: bool = True):
-        """
-        Leave the Pastry network gracefully.
-        """
         if transfer_data:
 
             all_nodes = self.get_leaf_set()
