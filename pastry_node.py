@@ -29,7 +29,8 @@ class PastryNode:
         self.num_rows = self.m_bits // self.b
         self.routing_table: Dict[int, Dict[int, 'PastryNode']] = {}
         
-        self.data = {} 
+        self.data = {}
+        self.replicas: Dict[str, any] = {} 
 
     def __repr__(self):
         return f"<PastryNode {self.address} ID:{self.hex_id[:8]}...>"
@@ -301,3 +302,99 @@ class PastryNode:
                     del self.routing_table[row_idx][digit]
             if not self.routing_table[row_idx]:
                 del self.routing_table[row_idx]
+    
+    def check_leaf_set(self) -> List['PastryNode']:
+        failed_nodes = []
+        
+        for node in self.leaf_smaller:
+            try:
+                if not hasattr(node, 'id'):
+                    failed_nodes.append(node)
+            except Exception:
+                failed_nodes.append(node)
+        
+        for node in self.leaf_larger:
+            try:
+                if not hasattr(node, 'id'):
+                    failed_nodes.append(node)
+            except Exception:
+                failed_nodes.append(node)
+        
+        return failed_nodes
+    
+    def repair_leaf_set(self, failed_nodes: List['PastryNode']):
+        for node in failed_nodes:
+            if node in self.leaf_smaller:
+                self.leaf_smaller.remove(node)
+            if node in self.leaf_larger:
+                self.leaf_larger.remove(node)
+    
+    def check_routing_table(self) -> List['PastryNode']:
+        failed_nodes = []
+        
+        for row_idx in list(self.routing_table.keys()):
+            for digit in list(self.routing_table[row_idx].keys()):
+                node = self.routing_table[row_idx][digit]
+                try:
+                    if not hasattr(node, 'id'):
+                        failed_nodes.append(node)
+                except Exception:
+                    failed_nodes.append(node)
+        
+        return failed_nodes
+    
+    def repair_routing_table(self, failed_nodes: List['PastryNode']):
+        for row_idx in list(self.routing_table.keys()):
+            for digit in list(self.routing_table[row_idx].keys()):
+                if self.routing_table[row_idx][digit] in failed_nodes:
+                    del self.routing_table[row_idx][digit]
+            if not self.routing_table[row_idx]:
+                del self.routing_table[row_idx]
+    
+    def replicate_data(self):
+        leaf_set = self.get_leaf_set()
+        if not leaf_set:
+            return
+        
+        for node in leaf_set:
+            try:
+                if hasattr(node, 'replicas'):
+                    for key, value in self.data.items():
+                        node.replicas[key] = value
+            except Exception:
+                continue
+    
+    def recover_data_from_replicas(self):
+        leaf_set = self.get_leaf_set()
+        
+        for node in leaf_set:
+            try:
+                if hasattr(node, 'data'):
+                    for key, value in node.data.items():
+                        if key not in self.data:
+                            key_id = self.hasher.hash_key(key)
+                            responsible, _ = self.route(key_id)
+                            if responsible is self:
+                                self.data[key] = value
+            except Exception:
+                continue
+        
+        for node in leaf_set:
+            try:
+                if hasattr(node, 'replicas'):
+                    for key, value in node.replicas.items():
+                        if key not in self.data:
+                            key_id = self.hasher.hash_key(key)
+                            responsible, _ = self.route(key_id)
+                            if responsible is self:
+                                self.data[key] = value
+            except Exception:
+                continue
+        
+        for key, value in list(self.replicas.items()):
+            if key not in self.data:
+                key_id = self.hasher.hash_key(key)
+                responsible, _ = self.route(key_id)
+                if responsible is self:
+                    self.data[key] = value
+                    del self.replicas[key]

@@ -101,6 +101,12 @@ class PastryNetworkNode(NetworkNodeTCP):
             elif operation == MessageType.ADD_NODE:
                 return create_response(request, result=True, success=True)
             
+            elif operation == MessageType.PING:
+                return create_response(request, result=True, success=True)
+            
+            elif operation == MessageType.GET_REPLICAS:
+                return create_response(request, result=dict(self.pastry_node.replicas), success=True)
+            
             else:
                 return create_response(
                     request,

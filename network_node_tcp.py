@@ -41,6 +41,11 @@ class NetworkNodeTCP:
         
         self.connection_cache: Dict[str, socket.socket] = {}
         self.connection_lock = threading.Lock()
+        
+        self.failed_nodes: Dict[str, float] = {}
+        self.failed_nodes_lock = threading.Lock()
+        self.max_retries = 3
+        self.retry_delay = 0.5
     
     def start(self):
         if self.running:
@@ -190,51 +195,103 @@ class NetworkNodeTCP:
             if request_id in self.pending_responses:
                 self.pending_responses[request_id].put(response)
     
+    def ping(self, target_address: str, timeout: Optional[float] = None) -> bool:
+        try:
+            self.send_request(
+                target_address,
+                MessageType.PING,
+                timeout=timeout or self.timeout
+            )
+            with self.failed_nodes_lock:
+                self.failed_nodes.pop(target_address, None)
+            return True
+        except Exception:
+            with self.failed_nodes_lock:
+                self.failed_nodes[target_address] = time.time()
+            return False
+    
+    def is_node_alive(self, target_address: str, use_cache: bool = True) -> bool:
+        if use_cache:
+            with self.failed_nodes_lock:
+                if target_address in self.failed_nodes:
+                    time_failed = self.failed_nodes[target_address]
+                    if time.time() - time_failed < 30:
+                        return False
+        
+        return self.ping(target_address, timeout=2.0)
+    
+    def mark_node_failed(self, target_address: str):
+        with self.failed_nodes_lock:
+            self.failed_nodes[target_address] = time.time()
+    
+    def mark_node_alive(self, target_address: str):
+        with self.failed_nodes_lock:
+            self.failed_nodes.pop(target_address, None)
+    
     def send_request(
         self,
         target_address: str,
         operation: MessageType,
         *args,
+        timeout: Optional[float] = None,
+        retries: Optional[int] = None,
         **kwargs
     ) -> Any:
-        request = create_request(
-            operation=operation,
-            sender_address=self.address,
-            receiver_address=target_address,
-            *args,
-            **kwargs
-        )
+        actual_timeout = timeout or self.timeout
+        actual_retries = retries if retries is not None else self.max_retries
         
-        response_queue = Queue()
-        with self.response_lock:
-            self.pending_responses[request.request_id] = response_queue
+        last_exception = None
         
-        if self.metrics:
-            self.metrics.start_request(request.request_id, operation.value)
-        
-        try:
-            self._send_request_to_node(target_address, request)
-            
+        for attempt in range(actual_retries + 1):
             try:
-                response = response_queue.get(timeout=self.timeout)
-            except Empty:
-                raise TimeoutError(f"Request {request.request_id} to {target_address} timed out")
-            
-            if self.metrics:
-                self.metrics.complete_request(
-                    request.request_id,
-                    operation.value,
-                    success=response.success
+                request = create_request(
+                    operation=operation,
+                    sender_address=self.address,
+                    receiver_address=target_address,
+                    *args,
+                    **kwargs
                 )
+                
+                response_queue = Queue()
+                with self.response_lock:
+                    self.pending_responses[request.request_id] = response_queue
+                
+                if self.metrics:
+                    self.metrics.start_request(request.request_id, operation.value)
+                
+                try:
+                    self._send_request_to_node(target_address, request)
+                    
+                    try:
+                        response = response_queue.get(timeout=actual_timeout)
+                    except Empty:
+                        raise TimeoutError(f"Request {request.request_id} to {target_address} timed out")
+                    
+                    if self.metrics:
+                        self.metrics.complete_request(
+                            request.request_id,
+                            operation.value,
+                            success=response.success
+                        )
+                    
+                    if not response.success:
+                        raise Exception(f"Remote error: {response.error}")
+                    
+                    self.mark_node_alive(target_address)
+                    return response.result
+                
+                finally:
+                    with self.response_lock:
+                        self.pending_responses.pop(request.request_id, None)
             
-            if not response.success:
-                raise Exception(f"Remote error: {response.error}")
-            
-            return response.result
+            except Exception as e:
+                last_exception = e
+                if attempt < actual_retries:
+                    time.sleep(self.retry_delay * (2 ** attempt))
+                else:
+                    self.mark_node_failed(target_address)
         
-        finally:
-            with self.response_lock:
-                self.pending_responses.pop(request.request_id, None)
+        raise last_exception
     
     def _send_request_to_node(self, target_address: str, request: RequestMessage):
         parts = target_address.split(':')

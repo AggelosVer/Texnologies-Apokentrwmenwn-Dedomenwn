@@ -105,6 +105,17 @@ class ChordNetworkNode(NetworkNodeTCP):
                 result = self.chord_node._get_keys_for_range(start_id, end_id)
                 return create_response(request, result=result, success=True)
             
+            elif operation == MessageType.PING:
+                return create_response(request, result=True, success=True)
+            
+            elif operation == MessageType.GET_SUCCESSOR_LIST:
+                successor_list = [self._serialize_node(node) for node in self.chord_node.successor_list]
+                return create_response(request, result=successor_list, success=True)
+            
+            elif operation == MessageType.CHECK_PREDECESSOR:
+                self.chord_node.check_predecessor()
+                return create_response(request, result=True, success=True)
+            
             else:
                 return create_response(
                     request,

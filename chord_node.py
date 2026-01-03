@@ -2,7 +2,7 @@ from typing import List, Optional
 from dht_hash import DHTHasher
 
 class ChordNode:
-    def __init__(self, ip: str, port: int, m_bits: int = 160):
+    def __init__(self, ip: str, port: int, m_bits: int = 160, successor_list_size: int = 3):
         self.ip = ip
         self.port = port
         self.address = f"{ip}:{port}"
@@ -14,6 +14,9 @@ class ChordNode:
         self.finger_table: List['ChordNode'] = [self] * self.m_bits
         self.next_finger = 0
         self.data = {}
+        self.successor_list_size = successor_list_size
+        self.successor_list: List['ChordNode'] = []
+        self.replicas: Dict[str, any] = {}
 
     def __repr__(self):
         return f"<ChordNode {self.address} ID:{self.hasher.get_hex_id(self.id)[:8]}...>"
@@ -101,8 +104,12 @@ class ChordNode:
                                    inclusive_start=False, inclusive_end=False):
                 self.update_successor(x)
             self.successor.notify(self)
+            self._update_successor_list()
         except AttributeError:
             self.successor.notify(self)
+            self._update_successor_list()
+        except Exception:
+            self._handle_successor_failure()
 
     def notify(self, node: 'ChordNode'):
         if node is None or node is self:
@@ -227,3 +234,78 @@ class ChordNode:
                                    inclusive_start=False, inclusive_end=True):
                 keys_in_range[key] = value
         return keys_in_range
+    
+    def _update_successor_list(self):
+        self.successor_list = []
+        current = self.successor
+        
+        for _ in range(self.successor_list_size):
+            if current is None or current is self:
+                break
+            self.successor_list.append(current)
+            if hasattr(current, 'successor'):
+                current = current.successor
+            else:
+                break
+    
+    def _handle_successor_failure(self):
+        if not self.successor_list:
+            self.successor = self
+            self.finger_table[0] = self
+            return
+        
+        for candidate in self.successor_list:
+            try:
+                if hasattr(candidate, 'id'):
+                    self.successor = candidate
+                    self.finger_table[0] = candidate
+                    self._update_successor_list()
+                    return
+            except Exception:
+                continue
+        
+        self.successor = self
+        self.finger_table[0] = self
+    
+    def check_predecessor(self):
+        if self.predecessor is not None:
+            try:
+                if not hasattr(self.predecessor, 'id'):
+                    self.predecessor = None
+            except Exception:
+                self.predecessor = None
+    
+    def replicate_data(self):
+        if not self.successor_list:
+            return
+        
+        for successor in self.successor_list:
+            try:
+                if hasattr(successor, 'replicas'):
+                    for key, value in self.data.items():
+                        successor.replicas[key] = value
+            except Exception:
+                continue
+    
+    def recover_data_from_replicas(self):
+        if self.predecessor is None:
+            return
+        
+        try:
+            if hasattr(self.predecessor, 'data'):
+                for key, value in self.predecessor.data.items():
+                    key_id = self.hasher.hash_key(key)
+                    if self.hasher.in_range(key_id, self.predecessor.id, self.id,
+                                          inclusive_start=False, inclusive_end=True):
+                        if key not in self.data:
+                            self.data[key] = value
+        except Exception:
+            pass
+        
+        for key, value in list(self.replicas.items()):
+            if key not in self.data:
+                key_id = self.hasher.hash_key(key)
+                responsible = self.find_successor(key_id)
+                if responsible is self:
+                    self.data[key] = value
+                    del self.replicas[key]

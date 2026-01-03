@@ -29,6 +29,9 @@ class MessageType(Enum):
     PING = "ping"
     GET_NODE_INFO = "get_node_info"
     GET_DATA = "get_data"
+    GET_SUCCESSOR_LIST = "get_successor_list"
+    GET_REPLICAS = "get_replicas"
+    CHECK_PREDECESSOR = "check_predecessor"
     RESPONSE = "response"
     ERROR = "error"
 
