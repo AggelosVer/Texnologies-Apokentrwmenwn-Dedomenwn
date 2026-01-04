@@ -1,5 +1,6 @@
 from typing import List, Optional
 from dht_hash import DHTHasher
+from bplus_tree import BPlusTree
 
 class ChordNode:
     def __init__(self, ip: str, port: int, m_bits: int = 160, successor_list_size: int = 3):
@@ -13,10 +14,10 @@ class ChordNode:
         self.predecessor: Optional['ChordNode'] = None
         self.finger_table: List['ChordNode'] = [self] * self.m_bits
         self.next_finger = 0
-        self.data = {}
+        self.data = BPlusTree(order=10)
         self.successor_list_size = successor_list_size
         self.successor_list: List['ChordNode'] = []
-        self.replicas: Dict[str, any] = {}
+        self.replicas = BPlusTree(order=10)
 
     def __repr__(self):
         return f"<ChordNode {self.address} ID:{self.hasher.get_hex_id(self.id)[:8]}...>"
@@ -309,3 +310,21 @@ class ChordNode:
                 if responsible is self:
                     self.data[key] = value
                     del self.replicas[key]
+
+    def local_range_query(self, attr_name: str, min_val, max_val):
+        results = []
+        for key, value in self.data.items():
+            if isinstance(value, dict) and attr_name in value:
+                attr_val = value[attr_name]
+                if min_val <= attr_val <= max_val:
+                    results.append(value)
+        return results
+    
+    def local_query_by_popularity(self, min_pop: float, max_pop: float):
+        return self.local_range_query('popularity', min_pop, max_pop)
+    
+    def local_query_by_rating(self, min_rating: float, max_rating: float):
+        return self.local_range_query('rating', min_rating, max_rating)
+    
+    def local_query_by_year(self, min_year: int, max_year: int):
+        return self.local_range_query('year', min_year, max_year)

@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict
 from dht_hash import DHTHasher
+from bplus_tree import BPlusTree
 
 class PastryNode:
     def __init__(self, ip: str, port: int, m_bits: int = 160, b: int = 4, l: int = 16, m: int = 32):
@@ -29,8 +30,8 @@ class PastryNode:
         self.num_rows = self.m_bits // self.b
         self.routing_table: Dict[int, Dict[int, 'PastryNode']] = {}
         
-        self.data = {}
-        self.replicas: Dict[str, any] = {} 
+        self.data = BPlusTree(order=10)
+        self.replicas = BPlusTree(order=10) 
 
     def __repr__(self):
         return f"<PastryNode {self.address} ID:{self.hex_id[:8]}...>"
@@ -398,3 +399,21 @@ class PastryNode:
                 if responsible is self:
                     self.data[key] = value
                     del self.replicas[key]
+
+    def local_range_query(self, attr_name: str, min_val, max_val):
+        results = []
+        for key, value in self.data.items():
+            if isinstance(value, dict) and attr_name in value:
+                attr_val = value[attr_name]
+                if min_val <= attr_val <= max_val:
+                    results.append(value)
+        return results
+    
+    def local_query_by_popularity(self, min_pop: float, max_pop: float):
+        return self.local_range_query('popularity', min_pop, max_pop)
+    
+    def local_query_by_rating(self, min_rating: float, max_rating: float):
+        return self.local_range_query('rating', min_rating, max_rating)
+    
+    def local_query_by_year(self, min_year: int, max_year: int):
+        return self.local_range_query('year', min_year, max_year)
