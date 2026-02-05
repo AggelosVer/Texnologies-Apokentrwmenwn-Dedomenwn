@@ -116,6 +116,12 @@ class ChordNetworkNode(NetworkNodeTCP):
                 self.chord_node.check_predecessor()
                 return create_response(request, result=True, success=True)
             
+            elif operation == MessageType.UPDATE:
+                key = args[0] if args else kwargs.get('key')
+                value = args[1] if len(args) > 1 else kwargs.get('value')
+                result = self.chord_node.update(key, value)
+                return create_response(request, result=result, success=True)
+            
             else:
                 return create_response(
                     request,
@@ -145,6 +151,9 @@ class ChordNetworkNode(NetworkNodeTCP):
     
     def delete(self, key: str) -> bool:
         return self.chord_node.delete(key)
+    
+    def update(self, key: str, value: Any) -> bool:
+        return self.chord_node.update(key, value)
     
     def __repr__(self):
         return f"<ChordNetworkNode {self.address} ID:{self.chord_node.hasher.get_hex_id(self.chord_node.id)[:8]}...>"

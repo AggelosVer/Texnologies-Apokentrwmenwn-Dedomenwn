@@ -194,6 +194,10 @@ class ChordNode:
         responsible_node.data[key] = value
         return True
     
+    def update(self, key: str, value) -> bool:
+        """Update an existing key's value. In this DHT, update is equivalent to insert."""
+        return self.insert(key, value)
+    
     def lookup(self, key: str):
         key_id = self.hasher.hash_key(key)
         responsible_node = self.find_successor(key_id)
