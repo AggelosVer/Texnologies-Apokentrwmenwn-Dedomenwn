@@ -79,29 +79,29 @@ def demo_pastry_network():
     node2 = PastryNetworkNode(ip="127.0.0.1", port=8001)
     node3 = PastryNetworkNode(ip="127.0.0.1", port=8002)
     
-    # Start nodes
+
     print("2. Starting nodes...")
     node1.start()
     node2.start()
     node3.start()
     time.sleep(1)
     
-    # Join network
+
     print("3. Joining Pastry network...")
     node2.pastry_node.join(node1.pastry_node)
     node3.pastry_node.join(node1.pastry_node)
     time.sleep(1)
     
-    # Insert data
+
     print("\n4. Inserting data...")
     success1, hops1 = node1.insert("user_1", "Alice")
     success2, hops2 = node2.insert("user_2", "Bob")
     success3, hops3 = node3.insert("user_3", "Charlie")
-    print(f"   ✓ Inserted user_1 ({hops1} hops)")
-    print(f"   ✓ Inserted user_2 ({hops2} hops)")
-    print(f"   ✓ Inserted user_3 ({hops3} hops)")
+    print(f"    Inserted user_1 ({hops1} hops)")
+    print(f"    Inserted user_2 ({hops2} hops)")
+    print(f"    Inserted user_3 ({hops3} hops)")
     
-    # Lookup data
+
     print("\n5. Looking up data from different nodes...")
     result1, hops1 = node1.lookup("user_1")
     result2, hops2 = node2.lookup("user_2")
@@ -110,19 +110,19 @@ def demo_pastry_network():
     print(f"    user_2: {result2} ({hops2} hops)")
     print(f"    user_3: {result3} ({hops3} hops)")
     
-    # Cross-node lookup
+
     print("\n6. Cross-node lookup (node1 looking up user_3)...")
     result, hops = node1.lookup("user_3")
     print(f"    Found: {result} ({hops} hops)")
     
-    # Network info
+
     print("\n7. Network information...")
     print(f"   Node 1 ID: {node1.pastry_node.hex_id[:16]}...")
     print(f"   Node 2 ID: {node2.pastry_node.hex_id[:16]}...")
     print(f"   Node 3 ID: {node3.pastry_node.hex_id[:16]}...")
     print(f"   Total keys in network: {len(node1.pastry_node.data) + len(node2.pastry_node.data) + len(node3.pastry_node.data)}")
     
-    # Cleanup
+
     print("\n8. Shutting down...")
     node1.pastry_node.leave()
     node2.pastry_node.leave()
@@ -210,9 +210,8 @@ def main():
 
         demo_node_failure()
         
-        print("\n All demonstrations completed successfully!\n")
-        print("To interact with the DHT networks manually, run:")
-        print("    python dht_cli.py\n")
+        print("\n Demos completed successfully!\n")
+
         
     except Exception as e:
         print(f"\n Error during demonstration: {e}\n")

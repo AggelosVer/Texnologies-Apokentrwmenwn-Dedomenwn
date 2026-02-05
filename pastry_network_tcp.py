@@ -171,7 +171,7 @@ class RemotePastryNode:
             self._id = info['id']
             self._hex_id = info['hex_id']
         except Exception as e:
-            # Info will be fetched again on next property access
+            
             pass
     
     @property
@@ -187,7 +187,7 @@ class RemotePastryNode:
         return self._hex_id or "unknown"
 
     def add_node(self, node: Any):
-        # Serialize node if it's a PastryNode or RemotePastryNode
+        
         node_info = {
             'address': node.address,
             'id': node.id,
@@ -201,17 +201,17 @@ class RemotePastryNode:
 
     @property
     def neighborhood_set(self) -> List['RemotePastryNode']:
-        # This is a simplification for join() to work
+        
         return []
 
     @property
     def routing_table(self) -> Dict[int, Dict[int, 'RemotePastryNode']]:
-        # This is a simplification for join() to work
+        
         return {}
 
     @property
     def data(self) -> Dict[str, Any]:
-        # Minimal proxy for data to allow join() iterations
+        
         try:
             return self.local_node.send_request(
                 self.address,

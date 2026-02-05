@@ -248,12 +248,12 @@ class PastryNode:
             self.add_node(node)
             node.add_node(self)
         
-        # Transfer data: request keys we're now responsible for from other nodes
+
         for node in all_nodes:
             keys_to_transfer = []
             for key, value in list(node.data.items()):
                 key_id = self.hasher.hash_key(key)
-                # Check if we are now the closest to this key
+            
                 responsible, _ = self.route(key_id)
                 if responsible is self:
                     keys_to_transfer.append((key, value))

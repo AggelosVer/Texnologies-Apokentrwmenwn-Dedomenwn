@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-# Set style for premium look
+
 plt.style.use('seaborn-v0_8-muted')
 sns.set_palette("husl")
 
@@ -15,9 +15,6 @@ def generate_performance_plots(csv_file='chord_vs_pastry_comparison.csv'):
 
     df = pd.read_csv(csv_file)
     
-    # 1. Comparison of Basic Operations (Mean Time)
-    # We'll filter for a specific parameter to make the bar chart readable
-    # For build, we'll use nodes=20. For others, we'll use the mid-range parameter.
     
     operations = df['operation'].unique()
     
@@ -26,11 +23,11 @@ def generate_performance_plots(csv_file='chord_vs_pastry_comparison.csv'):
     for i, op in enumerate(operations):
         op_df = df[df['operation'] == op]
         
-        # Pick the largest parameter for each operation for the main comparison
+
         max_param = op_df['parameter'].max()
         plot_df = op_df[op_df['parameter'] == max_param]
         
-        sns.barplot(x='protocol', y='mean', data=plot_df, ax=axes[i], palette=['#2E86AB', '#A23B72'])
+        sns.barplot(x='protocol', y='mean', data=plot_df, ax=axes[i], hue='protocol', palette=['#2E86AB', '#A23B72'], legend=False)
         axes[i].set_title(f'Mean Execution Time: {op.upper()} (Param={max_param})', fontsize=14, fontweight='bold')
         axes[i].set_ylabel('Time (seconds)', fontsize=12)
         axes[i].grid(True, alpha=0.3)

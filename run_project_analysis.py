@@ -3,7 +3,7 @@ import sys
 import os
 
 def main():
-    # Ensure instances directory exists
+
     os.makedirs('instances', exist_ok=True)
 
     scripts = [

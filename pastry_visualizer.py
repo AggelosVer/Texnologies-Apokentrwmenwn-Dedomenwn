@@ -17,7 +17,7 @@ class PastryVisualizer:
                                      show_routing_table: bool = True,
                                      show_neighborhood: bool = False,
                                      dpi: int = 100):
-        # Ensure instances directory exists
+
         os.makedirs('instances', exist_ok=True)
         fig, ax = plt.subplots(figsize=(14, 14), facecolor='white')
         ax.set_aspect('equal')
@@ -96,7 +96,7 @@ class PastryVisualizer:
         plt.close()
     
     def visualize_routing_table_detail(self, node: PastryNode, filename: str = 'instances/pastry_routing_table.png'):
-        # Ensure instances directory exists
+
         os.makedirs('instances', exist_ok=True)
         fig, ax = plt.subplots(figsize=(12, 8), facecolor='white')
         ax.axis('off')

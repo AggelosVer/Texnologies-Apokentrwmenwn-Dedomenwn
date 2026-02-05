@@ -8,17 +8,17 @@ from movie_loader import get_movie_sample
 def benchmark_concurrency():
     print("Initializing DHT and loading sample movies for concurrency benchmark...")
     
-    # Initialize mapper and DHT
+
     mapper = MovieDHTMapper(m_bits=160)
     mapper.create_chord_ring(num_nodes=20)
     
-    # Load sample movies
+
     _, movies = get_movie_sample(n_samples=500)
     mapper.insert_movies_into_dht(movies)
     
     all_titles = [m['title'] for m in movies]
     
-    # Test different K values
+
     k_values = [1, 5, 10, 20, 50, 100]
     results = []
     
@@ -46,7 +46,7 @@ def benchmark_concurrency():
             'success_rate': lookup_engine.stats['successful_queries'] / k
         })
     
-    # Save results
+
     with open('concurrency_benchmark_results.json', 'w') as f:
         json.dump(results, f, indent=4)
     

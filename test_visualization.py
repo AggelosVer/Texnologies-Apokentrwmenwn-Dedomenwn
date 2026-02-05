@@ -19,7 +19,6 @@ def test_chord_visualization():
     for node in nodes:
         node.fix_fingers()
     
-    # Ensure instances directory exists
     os.makedirs('instances', exist_ok=True)
     
     visualize_chord_network(nodes, 'instances/chord_network.png', show_fingers=False)

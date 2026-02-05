@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 def plot_hop_counts(results_file='pastry_hop_results.json', output_file='instances/pastry_hops.png'):
-    # Ensure instances directory exists
+
     os.makedirs('instances', exist_ok=True)
     with open(results_file, 'r') as f:
         results = json.load(f)
