@@ -99,6 +99,10 @@ class PastryNetworkNode(NetworkNodeTCP):
                 return create_response(request, result=dict(self.pastry_node.data), success=True)
             
             elif operation == MessageType.ADD_NODE:
+                node_data = args[0] if args else kwargs.get('node')
+                if isinstance(node_data, dict):
+                    remote_node = self.get_remote_node(node_data['address'])
+                    self.pastry_node.add_node(remote_node)
                 return create_response(request, result=True, success=True)
             
             elif operation == MessageType.PING:
@@ -155,14 +159,19 @@ class RemotePastryNode:
         self._fetch_info()
     
     def _fetch_info(self):
+        if self._id is not None:
+            return
         try:
             info = self.local_node.send_request(
                 self.address,
-                MessageType.GET_NODE_INFO
+                MessageType.GET_NODE_INFO,
+                timeout=2.0,
+                retries=1
             )
             self._id = info['id']
             self._hex_id = info['hex_id']
         except Exception as e:
+            # Info will be fetched again on next property access
             pass
     
     @property
@@ -175,7 +184,41 @@ class RemotePastryNode:
     def hex_id(self) -> str:
         if self._hex_id is None:
             self._fetch_info()
-        return self._hex_id
+        return self._hex_id or "unknown"
+
+    def add_node(self, node: Any):
+        # Serialize node if it's a PastryNode or RemotePastryNode
+        node_info = {
+            'address': node.address,
+            'id': node.id,
+            'hex_id': node.hex_id
+        }
+        self.local_node.send_request(
+            self.address,
+            MessageType.ADD_NODE,
+            node=node_info
+        )
+
+    @property
+    def neighborhood_set(self) -> List['RemotePastryNode']:
+        # This is a simplification for join() to work
+        return []
+
+    @property
+    def routing_table(self) -> Dict[int, Dict[int, 'RemotePastryNode']]:
+        # This is a simplification for join() to work
+        return {}
+
+    @property
+    def data(self) -> Dict[str, Any]:
+        # Minimal proxy for data to allow join() iterations
+        try:
+            return self.local_node.send_request(
+                self.address,
+                MessageType.GET_DATA
+            )
+        except:
+            return {}
     
     def route(self, key_id: int, hops: int = 0) -> Tuple['RemotePastryNode', int]:
         result = self.local_node.send_request(

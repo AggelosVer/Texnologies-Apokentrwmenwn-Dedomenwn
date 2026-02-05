@@ -4,7 +4,18 @@ from typing import List, Dict, Optional, Tuple
 import ast
 
 def load_movies_dataset(filepath: str = 'data_movies_clean.csv') -> pd.DataFrame:
-    df = pd.read_csv(filepath, low_memory=False)
+    # Use latin-1 encoding for broader character support and skip bad lines
+    df = pd.read_csv(filepath, low_memory=False, on_bad_lines='skip', encoding='latin-1')
+    
+    # Clean column names (handle trailing delimiters like ;;;)
+    df.columns = [col.split(';')[0] if isinstance(col, str) else col for col in df.columns]
+    
+    # Coerce numeric columns to handle mixed types in full dataset
+    numeric_cols = ['budget', 'revenue', 'runtime', 'vote_average']
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
     return df
 
 def clean_movie_data(df: pd.DataFrame) -> pd.DataFrame:
