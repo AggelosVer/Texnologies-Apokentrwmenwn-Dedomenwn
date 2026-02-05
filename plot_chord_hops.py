@@ -2,7 +2,11 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_hop_counts(results_file='chord_hop_results.json', output_file='chord_hops.png'):
+import os
+
+def plot_hop_counts(results_file='chord_hop_results.json', output_file='instances/chord_hops.png'):
+    # Ensure instances directory exists
+    os.makedirs('instances', exist_ok=True)
     with open(results_file, 'r') as f:
         results = json.load(f)
     
@@ -47,7 +51,7 @@ def plot_hop_counts(results_file='chord_hop_results.json', output_file='chord_ho
     plt.grid(True, alpha=0.3)
     plt.legend(fontsize=10)
     plt.tight_layout()
-    plt.savefig('chord_hops_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig('instances/chord_hops_comparison.png', dpi=300, bbox_inches='tight')
 
 if __name__ == "__main__":
     plot_hop_counts()
