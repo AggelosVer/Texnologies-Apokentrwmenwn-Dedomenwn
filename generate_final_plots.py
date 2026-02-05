@@ -36,8 +36,9 @@ def generate_performance_plots(csv_file='chord_vs_pastry_comparison.csv'):
         axes[i].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('performance_comparison_bars.png', dpi=300)
-    print("Saved performance_comparison_bars.png")
+    output_path = os.path.join('instances', 'performance_comparison_bars.png')
+    plt.savefig(output_path, dpi=300)
+    print(f"Saved {output_path}")
 
     # 2. Scaling Plots
     for op in operations:
@@ -53,7 +54,8 @@ def generate_performance_plots(csv_file='chord_vs_pastry_comparison.csv'):
         plt.ylabel('Mean Time (s)', fontsize=12)
         plt.legend(fontsize=12)
         plt.grid(True, alpha=0.3)
-        plt.savefig(f'scaling_{op}.png', dpi=300)
+        output_path = os.path.join('instances', f'scaling_{op}.png')
+        plt.savefig(output_path, dpi=300)
         plt.close()
     
     print("Saved scaling plots for each operation.")
@@ -74,7 +76,8 @@ def generate_concurrency_plots(json_file='concurrency_benchmark_results.json'):
     plt.xlabel('Number of Movies (K)', fontsize=12)
     plt.ylabel('Total Execution Time (s)', fontsize=12)
     plt.grid(True, alpha=0.3)
-    plt.savefig('concurrency_scaling.png', dpi=300)
+    output_path = os.path.join('instances', 'concurrency_scaling.png')
+    plt.savefig(output_path, dpi=300)
     
     plt.figure(figsize=(10, 6))
     plt.plot(df['k'], df['avg_time'], 's-', color='#27AE60', linewidth=3, markersize=10)
@@ -82,7 +85,8 @@ def generate_concurrency_plots(json_file='concurrency_benchmark_results.json'):
     plt.xlabel('Number of Movies (K)', fontsize=12)
     plt.ylabel('Average Latency (s)', fontsize=12)
     plt.grid(True, alpha=0.3)
-    plt.savefig('concurrency_avg_latency.png', dpi=300)
+    output_path = os.path.join('instances', 'concurrency_avg_latency.png')
+    plt.savefig(output_path, dpi=300)
     
     print("Saved concurrency plots.")
 

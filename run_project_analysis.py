@@ -11,11 +11,13 @@ def main():
         "pastry_hop_analyzer.py",
         "benchmark_chord.py",
         "benchmark_pastry.py",
-        "compare_performance.py",
         "compare_hops.py",
         "plot_chord_hops.py",
         "plot_pastry_hops.py",
-        "test_visualization.py"
+        "test_visualization.py",
+        "benchmark_concurrency.py",
+        "compare_performance.py",
+        "generate_final_plots.py"
     ]
 
     for script in scripts:

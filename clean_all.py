@@ -6,10 +6,22 @@ def main():
     files_to_remove = [
         "chord_hop_results.json",
         "pastry_hop_results.json",
+        "concurrency_benchmark_results.json",
         "chord_benchmark_results.csv",
         "pastry_benchmark_results.csv",
         "chord_vs_pastry_comparison.csv",
-        "movie_dht_mappings.json"
+        "movie_dht_mappings.json",
+        "performance_comparison_bars.png",
+        "concurrency_scaling.png",
+        "concurrency_avg_latency.png",
+        "scaling_node_join.png",
+        "scaling_lookup.png",
+        "scaling_build.png",
+        "scaling_insert.png",
+        "scaling_delete.png",
+        "scaling_node_leave.png",
+        "scaling_update.png",
+        "chord_vs_pastry_hops.png"
     ]
     
     # Directory to delete
