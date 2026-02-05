@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
@@ -11,11 +12,13 @@ class PastryVisualizer:
         self.m_bits = m_bits
         self.ring_size = 2 ** m_bits
         
-    def visualize_routing_connections(self, filename: str = 'pastry_network.png', 
+    def visualize_routing_connections(self, filename: str = 'instances/pastry_network.png', 
                                      show_leaf_set: bool = True,
                                      show_routing_table: bool = True,
                                      show_neighborhood: bool = False,
                                      dpi: int = 100):
+        # Ensure instances directory exists
+        os.makedirs('instances', exist_ok=True)
         fig, ax = plt.subplots(figsize=(14, 14), facecolor='white')
         ax.set_aspect('equal')
         ax.axis('off')
@@ -92,7 +95,9 @@ class PastryVisualizer:
         plt.savefig(filename, dpi=dpi, bbox_inches='tight', facecolor='white')
         plt.close()
     
-    def visualize_routing_table_detail(self, node: PastryNode, filename: str = 'pastry_routing_table.png'):
+    def visualize_routing_table_detail(self, node: PastryNode, filename: str = 'instances/pastry_routing_table.png'):
+        # Ensure instances directory exists
+        os.makedirs('instances', exist_ok=True)
         fig, ax = plt.subplots(figsize=(12, 8), facecolor='white')
         ax.axis('off')
         
@@ -153,7 +158,7 @@ class PastryVisualizer:
         plt.close()
 
 
-def visualize_pastry_network(nodes: List[PastryNode], filename: str = 'pastry_network.png',
+def visualize_pastry_network(nodes: List[PastryNode], filename: str = 'instances/pastry_network.png',
                              show_leaf_set: bool = True,
                              show_routing_table: bool = True,
                              show_neighborhood: bool = False,
@@ -162,6 +167,6 @@ def visualize_pastry_network(nodes: List[PastryNode], filename: str = 'pastry_ne
     visualizer.visualize_routing_connections(filename, show_leaf_set, show_routing_table, show_neighborhood)
 
 
-def visualize_pastry_routing_table(node: PastryNode, filename: str = 'pastry_routing_table.png'):
+def visualize_pastry_routing_table(node: PastryNode, filename: str = 'instances/pastry_routing_table.png'):
     visualizer = PastryVisualizer([node], node.m_bits)
     visualizer.visualize_routing_table_detail(node, filename)

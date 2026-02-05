@@ -2,9 +2,14 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
+import os
+
 def plot_comparison(chord_file='chord_hop_results.json', 
                    pastry_file='pastry_hop_results.json',
-                   output_file='chord_vs_pastry_hops.png'):
+                   output_file='instances/chord_vs_pastry_hops.png'):
+    
+    # Ensure instances directory exists
+    os.makedirs('instances', exist_ok=True)
     
     with open(chord_file, 'r') as f:
         chord_results = json.load(f)

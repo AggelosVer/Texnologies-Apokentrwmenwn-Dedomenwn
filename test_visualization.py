@@ -1,3 +1,4 @@
+import os
 from chord_node import ChordNode
 from chord_visualizer import visualize_chord_network
 
@@ -18,8 +19,11 @@ def test_chord_visualization():
     for node in nodes:
         node.fix_fingers()
     
-    visualize_chord_network(nodes, 'chord_network.png', show_fingers=False)
-    visualize_chord_network(nodes, 'chord_network_with_fingers.png', show_fingers=True)
+    # Ensure instances directory exists
+    os.makedirs('instances', exist_ok=True)
+    
+    visualize_chord_network(nodes, 'instances/chord_network.png', show_fingers=False)
+    visualize_chord_network(nodes, 'instances/chord_network_with_fingers.png', show_fingers=True)
 
 
 if __name__ == "__main__":

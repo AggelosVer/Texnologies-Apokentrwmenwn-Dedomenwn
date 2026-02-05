@@ -2,7 +2,11 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_hop_counts(results_file='pastry_hop_results.json', output_file='pastry_hops.png'):
+import os
+
+def plot_hop_counts(results_file='pastry_hop_results.json', output_file='instances/pastry_hops.png'):
+    # Ensure instances directory exists
+    os.makedirs('instances', exist_ok=True)
     with open(results_file, 'r') as f:
         results = json.load(f)
     
@@ -48,7 +52,7 @@ def plot_hop_counts(results_file='pastry_hop_results.json', output_file='pastry_
     plt.grid(True, alpha=0.3)
     plt.legend(fontsize=10)
     plt.tight_layout()
-    plt.savefig('pastry_hops_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig('instances/pastry_hops_comparison.png', dpi=300, bbox_inches='tight')
     print(f"Saved comparison plot to pastry_hops_comparison.png")
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
@@ -11,8 +12,10 @@ class ChordVisualizer:
         self.m_bits = m_bits
         self.ring_size = 2 ** m_bits
         
-    def visualize_successor_graph(self, filename: str = 'chord_network.png', 
+    def visualize_successor_graph(self, filename: str = 'instances/chord_network.png', 
                                   show_fingers: bool = False, dpi: int = 100):
+        # Ensure instances directory exists
+        os.makedirs('instances', exist_ok=True)
         fig, ax = plt.subplots(figsize=(12, 12), facecolor='white')
         ax.set_aspect('equal')
         ax.axis('off')
@@ -77,7 +80,7 @@ class ChordVisualizer:
         plt.close()
 
 
-def visualize_chord_network(nodes: List[ChordNode], filename: str = 'chord_network.png',
+def visualize_chord_network(nodes: List[ChordNode], filename: str = 'instances/chord_network.png',
                            show_fingers: bool = False, m_bits: int = 160):
     visualizer = ChordVisualizer(nodes, m_bits)
     visualizer.visualize_successor_graph(filename, show_fingers)
