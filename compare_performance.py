@@ -409,6 +409,79 @@ class PerformanceComparison:
             'avg_per_lookup': statistics.mean(times) / num_lookups
         }
     
+    def benchmark_chord_update(self, num_nodes: int, num_items: int, num_updates: int, num_runs: int = 5) -> Dict[str, float]:
+        times = []
+        
+        for run in range(num_runs):
+            nodes = self.create_chord_nodes(num_nodes)
+            nodes[0].create_ring()
+            for i in range(1, num_nodes):
+                nodes[i].join(nodes[0], init_fingers=True, transfer_data=False)
+            for node in nodes:
+                node.fix_fingers()
+            
+            keys = []
+            for i in range(num_items):
+                key = f"key_{i}"
+                value = f"value_{i}"
+                random_node = random.choice(nodes)
+                random_node.insert(key, value)
+                keys.append(key)
+            
+            start_time = time.time()
+            for _ in range(num_updates):
+                key = random.choice(keys)
+                new_value = f"updated_{key}"
+                random_node = random.choice(nodes)
+                random_node.update(key, new_value)
+            
+            end_time = time.time()
+            times.append(end_time - start_time)
+            
+        return {
+            'mean': statistics.mean(times),
+            'median': statistics.median(times),
+            'stdev': statistics.stdev(times) if len(times) > 1 else 0,
+            'min': min(times),
+            'max': max(times),
+            'avg_per_update': statistics.mean(times) / num_updates
+        }
+
+    def benchmark_pastry_update(self, num_nodes: int, num_items: int, num_updates: int, num_runs: int = 5) -> Dict[str, float]:
+        times = []
+        
+        for run in range(num_runs):
+            nodes = self.create_pastry_nodes(num_nodes)
+            for i in range(1, num_nodes):
+                nodes[i].join(nodes[0])
+            
+            keys = []
+            for i in range(num_items):
+                key = f"key_{i}"
+                value = f"value_{i}"
+                random_node = random.choice(nodes)
+                random_node.insert(key, value)
+                keys.append(key)
+            
+            start_time = time.time()
+            for _ in range(num_updates):
+                key = random.choice(keys)
+                new_value = f"updated_{key}"
+                random_node = random.choice(nodes)
+                random_node.update(key, new_value)
+            
+            end_time = time.time()
+            times.append(end_time - start_time)
+            
+        return {
+            'mean': statistics.mean(times),
+            'median': statistics.median(times),
+            'stdev': statistics.stdev(times) if len(times) > 1 else 0,
+            'min': min(times),
+            'max': max(times),
+            'avg_per_update': statistics.mean(times) / num_updates
+        }
+    
     def compare_all_operations(self):
         all_results = []
         
@@ -648,6 +721,45 @@ class PerformanceComparison:
                 'avg_per_op': pastry_result['avg_per_lookup']
             })
         
+        print("\n7. UPDATE COMPARISON")
+        print("-" * 100)
+        print(f"{'Updates':<10}{'Protocol':<15}{'Mean (s)':<15}{'Median (s)':<15}{'StdDev (s)':<15}{'Avg/Op (s)':<15}")
+        print("-" * 100)
+        for num_updates in [100, 500, 1000]:
+            chord_result = self.benchmark_chord_update(10, 500, num_updates, num_runs=3)
+            pastry_result = self.benchmark_pastry_update(10, 500, num_updates, num_runs=3)
+            
+            print(f"{num_updates:<10}{'Chord':<15}{chord_result['mean']:<15.4f}{chord_result['median']:<15.4f}{chord_result['stdev']:<15.4f}{chord_result['avg_per_update']:<15.6f}")
+            print(f"{'':<10}{'Pastry':<15}{pastry_result['mean']:<15.4f}{pastry_result['median']:<15.4f}{pastry_result['stdev']:<15.4f}{pastry_result['avg_per_update']:<15.6f}")
+            
+            speedup = chord_result['mean'] / pastry_result['mean'] if pastry_result['mean'] > 0 else 0
+            faster = "Chord" if speedup > 1 else "Pastry"
+            print(f"{'':<10}{'Speedup:':<15}{abs(speedup):<15.2f}x ({faster} is faster)")
+            print("-" * 100)
+            
+            all_results.append({
+                'operation': 'update',
+                'parameter': num_updates,
+                'protocol': 'Chord',
+                'mean': chord_result['mean'],
+                'median': chord_result['median'],
+                'stdev': chord_result['stdev'],
+                'min': chord_result['min'],
+                'max': chord_result['max'],
+                'avg_per_op': chord_result['avg_per_update']
+            })
+            all_results.append({
+                'operation': 'update',
+                'parameter': num_updates,
+                'protocol': 'Pastry',
+                'mean': pastry_result['mean'],
+                'median': pastry_result['median'],
+                'stdev': pastry_result['stdev'],
+                'min': pastry_result['min'],
+                'max': pastry_result['max'],
+                'avg_per_op': pastry_result['avg_per_update']
+            })
+
         print("\n" + "=" * 100)
         print("COMPARISON COMPLETE")
         print("=" * 100)
