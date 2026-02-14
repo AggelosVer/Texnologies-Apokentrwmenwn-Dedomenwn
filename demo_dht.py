@@ -152,13 +152,26 @@ def demo_node_failure():
     nodes[0].chord_node.create_ring()
     for i in range(1, 4):
         nodes[i].chord_node.join(nodes[0].chord_node)
+    
+    print("   Stabilizing network...")
+    for _ in range(3):
+        for node in nodes:
+            node.chord_node.stabilize()
+            node.chord_node.fix_fingers()
+        time.sleep(0.5)
+    
     time.sleep(1)
     
 
     print("\n3. Inserting data across nodes...")
-    for i in range(10):
+    for i in range(200):
         nodes[i % 4].insert(f"key_{i}", f"value_{i}")
-    print(f"    Inserted 10 key-value pairs")
+
+    for node in nodes:
+        node.chord_node.stabilize()
+        node.chord_node.replicate_data()
+    
+    print(f"    Inserted 200 key-value pairs with replication")
     
     print("\n4. Data distribution before failure:")
     for i, node in enumerate(nodes):
@@ -168,17 +181,29 @@ def demo_node_failure():
     print("\n5. Simulating failure of node 1...")
     nodes[1].chord_node.leave()
     nodes[1].stop()
-    time.sleep(1)
     print("    Node 1 removed")
+    
+    print("   Healing network (Aggressive Post-failure stabilization)...")
+    for _ in range(5):
+        for i, node in enumerate(nodes):
+            if i != 1:
+                node.chord_node.stabilize()
+                node.chord_node.recover_data_from_replicas()
+                for _ in range(node.chord_node.m_bits // 10):
+                    node.chord_node.fix_fingers()
+        time.sleep(0.5)
+    
+    time.sleep(2)
     
 
     print("\n6. Verifying data accessibility after failure...")
     accessible = 0
-    for i in range(10):
-        result = nodes[0].lookup(f"key_{i}")
+    for i in range(200):
+        key = f"key_{i}"
+        result = nodes[0].chord_node.lookup(key)
         if result is not None:
             accessible += 1
-    print(f"   ✓ {accessible}/10 keys still accessible")
+    print(f"   ✓ {accessible}/200 keys still accessible")
     
 
     print("\n7. Data distribution after failure:")
