@@ -142,7 +142,7 @@ def demo_node_failure():
     print("\n1. Creating 4 Chord nodes...")
     nodes = []
     for i in range(4):
-        node = ChordNetworkNode(ip="127.0.0.1", port=9000 + i)
+        node = ChordNetworkNode(ip="127.0.0.1", port=19000 + i)
         node.start()
         nodes.append(node)
     time.sleep(1)

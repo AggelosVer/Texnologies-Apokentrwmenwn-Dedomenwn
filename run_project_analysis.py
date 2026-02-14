@@ -12,6 +12,7 @@ def main():
         "benchmark_chord.py",
         "benchmark_pastry.py",
         "compare_hops.py",
+        "generate_pastry_topology.py",
         "plot_chord_hops.py",
         "plot_pastry_hops.py",
         "test_visualization.py",
