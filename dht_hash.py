@@ -11,24 +11,12 @@ class DHTHasher:
         self.ring_size = 2 ** m_bits
         
     def hash_key(self, key: str) -> int:
-
         normalized_key = key.strip().lower()
-        
-
         key_bytes = normalized_key.encode('utf-8')
-        
-
-        hash_obj = hashlib.sha1(key_bytes)
-        
-
+        hash_obj = hashlib.sha1(key_bytes) 
         hex_digest = hash_obj.hexdigest()
-        
-
         hash_int = int(hex_digest, 16)
-        
-
         identifier = hash_int % self.ring_size
-        
         return identifier
     
     def hash_node_id(self, node_address: str) -> int:

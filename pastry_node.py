@@ -17,16 +17,10 @@ class PastryNode:
         self.base = 2 ** b
         self.leaf_set_size = l
         self.neighborhood_size = m
-        
 
         self.leaf_smaller: List['PastryNode'] = []
-
         self.leaf_larger: List['PastryNode'] = []
-        
-
         self.neighborhood_set: List['PastryNode'] = []
-        
-
         self.num_rows = self.m_bits // self.b
         self.routing_table: Dict[int, Dict[int, 'PastryNode']] = {}
         
@@ -131,15 +125,11 @@ class PastryNode:
     def route(self, key_id: int, hops: int = 0, visited: Optional[set] = None) -> tuple['PastryNode', int]:
         if visited is None:
             visited = set()
-        
         if self.id in visited or hops > 100:
             return (self, hops)
-        
         visited.add(self.id)
-        
         key_hex = self.hasher.get_hex_id(key_id, digits=self.m_bits//4)
         shared_prefix = self._shared_prefix_length(key_hex)
-        
         if self.is_in_leaf_set_range(key_id):
             closest = self.find_closest_in_leaf_set(key_id)
             if closest is self:
@@ -147,15 +137,12 @@ class PastryNode:
             if closest.id not in visited:
                 return closest.route(key_id, hops + 1, visited)
             return (self, hops)
-        
         if shared_prefix < self.num_rows:
             next_digit = int(key_hex[shared_prefix], 16)
-            
             if shared_prefix in self.routing_table and next_digit in self.routing_table[shared_prefix]:
                 next_node = self.routing_table[shared_prefix][next_digit]
                 if next_node.id not in visited:
                     return next_node.route(key_id, hops + 1, visited)
-            
             for digit in range(self.base):
                 if shared_prefix in self.routing_table and digit in self.routing_table[shared_prefix]:
                     candidate = self.routing_table[shared_prefix][digit]
@@ -163,7 +150,6 @@ class PastryNode:
                         candidate_key_prefix = self._shared_prefix_length_between(candidate.hex_id, key_hex)
                         if candidate_key_prefix > shared_prefix:
                             return candidate.route(key_id, hops + 1, visited)
-        
         for row_idx in range(shared_prefix + 1, self.num_rows):
             if row_idx in self.routing_table:
                 for digit, node in self.routing_table[row_idx].items():
@@ -171,11 +157,9 @@ class PastryNode:
                         node_key_prefix = self._shared_prefix_length_between(node.hex_id, key_hex)
                         if node_key_prefix > shared_prefix:
                             return node.route(key_id, hops + 1, visited)
-        
         closest_leaf = self.find_closest_in_leaf_set(key_id)
         if closest_leaf is not self and closest_leaf.id not in visited:
             return closest_leaf.route(key_id, hops + 1, visited)
-        
         return (self, hops)
 
     def _shared_prefix_length_between(self, hex_id1: str, hex_id2: str) -> int:
