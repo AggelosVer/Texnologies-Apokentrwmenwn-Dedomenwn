@@ -16,14 +16,14 @@ class PerformanceComparison:
     def create_chord_nodes(self, num_nodes: int) -> List[ChordNode]:
         nodes = []
         for i in range(num_nodes):
-            node = ChordNode(f"192.168.1.{i}", 5000 + i, self.m_bits)
+            node = ChordNode("127.0.0.1", 5000 + i, self.m_bits)
             nodes.append(node)
         return nodes
     
     def create_pastry_nodes(self, num_nodes: int) -> List[PastryNode]:
         nodes = []
         for i in range(num_nodes):
-            node = PastryNode(f"192.168.1.{i}", 5000 + i, self.m_bits, self.b, self.l, self.m)
+            node = PastryNode("127.0.0.1", 5000 + i, self.m_bits, self.b, self.l, self.m)
             nodes.append(node)
         return nodes
     
@@ -40,8 +40,11 @@ class PerformanceComparison:
             for i in range(1, num_nodes):
                 nodes[i].join(nodes[0], init_fingers=True, transfer_data=False)
             
-            for node in nodes:
-                node.fix_fingers()
+            for _ in range(5):
+                for node in nodes:
+                    node.stabilize()
+                    for _ in range(10):
+                        node.fix_fingers()
             
             end_time = time.time()
             times.append(end_time - start_time)
@@ -86,8 +89,11 @@ class PerformanceComparison:
             for i in range(1, num_nodes):
                 nodes[i].join(nodes[0], init_fingers=True, transfer_data=False)
             
-            for node in nodes:
-                node.fix_fingers()
+            for _ in range(5):
+                for node in nodes:
+                    node.stabilize()
+                    for _ in range(10):
+                        node.fix_fingers()
             
             start_time = time.time()
             
@@ -148,8 +154,11 @@ class PerformanceComparison:
             for i in range(1, num_nodes):
                 nodes[i].join(nodes[0], init_fingers=True, transfer_data=False)
             
-            for node in nodes:
-                node.fix_fingers()
+            for _ in range(5):
+                for node in nodes:
+                    node.stabilize()
+                    for _ in range(10):
+                        node.fix_fingers()
             
             keys = []
             for i in range(num_items):
@@ -222,8 +231,11 @@ class PerformanceComparison:
             for i in range(1, initial_nodes):
                 nodes[i].join(nodes[0], init_fingers=True, transfer_data=False)
             
-            for node in nodes:
-                node.fix_fingers()
+            for _ in range(5):
+                for node in nodes:
+                    node.stabilize()
+                    for _ in range(10):
+                        node.fix_fingers()
             
             new_nodes = self.create_chord_nodes(num_joins)
             
@@ -283,8 +295,11 @@ class PerformanceComparison:
             for i in range(1, num_nodes):
                 nodes[i].join(nodes[0], init_fingers=True, transfer_data=False)
             
-            for node in nodes:
-                node.fix_fingers()
+            for _ in range(5):
+                for node in nodes:
+                    node.stabilize()
+                    for _ in range(10):
+                        node.fix_fingers()
             
             leaving_nodes = random.sample(nodes[1:], min(num_leaves, len(nodes) - 1))
             
@@ -343,8 +358,11 @@ class PerformanceComparison:
             for i in range(1, num_nodes):
                 nodes[i].join(nodes[0], init_fingers=True, transfer_data=False)
             
-            for node in nodes:
-                node.fix_fingers()
+            for _ in range(5):
+                for node in nodes:
+                    node.stabilize()
+                    for _ in range(10):
+                        node.fix_fingers()
             
             keys = []
             for i in range(num_items):

@@ -14,7 +14,7 @@ class MovieDHTMapper:
     def create_chord_ring(self, num_nodes: int = 5) -> List[ChordNode]:
         nodes = []
         for i in range(num_nodes):
-            node = ChordNode(f"192.168.1.{i+1}", 8000 + i, self.m_bits)
+            node = ChordNode("127.0.0.1", 8000 + i, self.m_bits)
             nodes.append(node)
         
         nodes.sort(key=lambda n: n.id)
@@ -25,10 +25,12 @@ class MovieDHTMapper:
         for i in range(1, len(nodes)):
             nodes[i].join(introducer, init_fingers=True, transfer_data=True)
         
-        for _ in range(2):
+        print("Stabilizing ring and populating finger tables...")
+        for _ in range(5):
             for node in nodes:
                 node.stabilize()
-                node.fix_fingers()
+                for _ in range(20):
+                    node.fix_fingers()
         
         self.nodes = nodes
         return nodes
