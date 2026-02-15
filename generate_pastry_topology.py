@@ -7,7 +7,6 @@ def run_topology_demo():
     m_bits = 160
     num_nodes = 40
     
-    # Create nodes
     nodes = []
     for i in range(num_nodes):
         
@@ -18,14 +17,10 @@ def run_topology_demo():
     for i in range(1, num_nodes):
         nodes[i].join(nodes[0])
     
-    # Ensure directory exists
     os.makedirs('instances', exist_ok=True)
     
     print("Generating network topology plot: instances/pastry_network.png")
     visualize_pastry_network(nodes, 'instances/pastry_network.png')
-    
-    print("Generating detailed routing table plot for Node 0: instances/pastry_routing_table.png")
-    visualize_pastry_routing_table(nodes[0], 'instances/pastry_routing_table.png')
     
 
 if __name__ == "__main__":
