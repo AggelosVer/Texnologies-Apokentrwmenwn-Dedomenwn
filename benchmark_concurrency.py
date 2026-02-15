@@ -10,16 +10,16 @@ def benchmark_concurrency():
     
 
     mapper = MovieDHTMapper(m_bits=160)
-    mapper.create_chord_ring(num_nodes=20)
+    mapper.create_chord_ring(num_nodes=40)
     
 
-    _, movies = get_movie_sample(n_samples=500)
+    _, movies = get_movie_sample(n_samples=2000)
     mapper.insert_movies_into_dht(movies)
     
     all_titles = [m['title'] for m in movies]
     
 
-    k_values = [1, 5, 10, 20, 50, 100]
+    k_values = [1, 10, 50, 100, 200, 500]
     results = []
     
     lookup_engine = ConcurrentMovieLookup(mapper, max_workers=20)

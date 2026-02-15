@@ -511,9 +511,9 @@ class PerformanceComparison:
         print("-" * 100)
         print(f"{'Nodes':<10}{'Protocol':<15}{'Mean (s)':<15}{'Median (s)':<15}{'StdDev (s)':<15}{'Min (s)':<15}{'Max (s)':<15}")
         print("-" * 100)
-        for num_nodes in [5, 10, 20, 50]:
-            chord_result = self.benchmark_chord_build(num_nodes, num_runs=3)
-            pastry_result = self.benchmark_pastry_build(num_nodes, num_runs=3)
+        for num_nodes in [10, 20, 50, 100]:
+            chord_result = self.benchmark_chord_build(num_nodes, num_runs=5)
+            pastry_result = self.benchmark_pastry_build(num_nodes, num_runs=5)
             
             print(f"{num_nodes:<10}{'Chord':<15}{chord_result['mean']:<15.4f}{chord_result['median']:<15.4f}{chord_result['stdev']:<15.4f}{chord_result['min']:<15.4f}{chord_result['max']:<15.4f}")
             print(f"{'':<10}{'Pastry':<15}{pastry_result['mean']:<15.4f}{pastry_result['median']:<15.4f}{pastry_result['stdev']:<15.4f}{pastry_result['min']:<15.4f}{pastry_result['max']:<15.4f}")
@@ -553,9 +553,9 @@ class PerformanceComparison:
         print("-" * 100)
         print(f"{'Inserts':<10}{'Protocol':<15}{'Mean (s)':<15}{'Median (s)':<15}{'StdDev (s)':<15}{'Avg/Op (s)':<15}")
         print("-" * 100)
-        for num_inserts in [100, 500, 1000]:
-            chord_result = self.benchmark_chord_insert(10, num_inserts, num_runs=3)
-            pastry_result = self.benchmark_pastry_insert(10, num_inserts, num_runs=3)
+        for num_inserts in [1000, 5000, 10000]:
+            chord_result = self.benchmark_chord_insert(20, num_inserts, num_runs=5)
+            pastry_result = self.benchmark_pastry_insert(20, num_inserts, num_runs=5)
             
             print(f"{num_inserts:<10}{'Chord':<15}{chord_result['mean']:<15.4f}{chord_result['median']:<15.4f}{chord_result['stdev']:<15.4f}{chord_result['avg_per_insert']:<15.6f}")
             print(f"{'':<10}{'Pastry':<15}{pastry_result['mean']:<15.4f}{pastry_result['median']:<15.4f}{pastry_result['stdev']:<15.4f}{pastry_result['avg_per_insert']:<15.6f}")
@@ -597,9 +597,9 @@ class PerformanceComparison:
         print("-" * 100)
         print(f"{'Deletes':<10}{'Protocol':<15}{'Mean (s)':<15}{'Median (s)':<15}{'StdDev (s)':<15}{'Avg/Op (s)':<15}")
         print("-" * 100)
-        for num_items in [100, 500, 1000]:
-            chord_result = self.benchmark_chord_delete(10, num_items, num_runs=3)
-            pastry_result = self.benchmark_pastry_delete(10, num_items, num_runs=3)
+        for num_items in [1000, 5000, 10000]:
+            chord_result = self.benchmark_chord_delete(20, num_items, num_runs=5)
+            pastry_result = self.benchmark_pastry_delete(20, num_items, num_runs=5)
             
             print(f"{num_items:<10}{'Chord':<15}{chord_result['mean']:<15.4f}{chord_result['median']:<15.4f}{chord_result['stdev']:<15.4f}{chord_result['avg_per_delete']:<15.6f}")
             print(f"{'':<10}{'Pastry':<15}{pastry_result['mean']:<15.4f}{pastry_result['median']:<15.4f}{pastry_result['stdev']:<15.4f}{pastry_result['avg_per_delete']:<15.6f}")
@@ -729,9 +729,9 @@ class PerformanceComparison:
         print("-" * 100)
         print(f"{'Lookups':<10}{'Protocol':<15}{'Mean (s)':<15}{'Median (s)':<15}{'StdDev (s)':<15}{'Avg/Op (s)':<15}")
         print("-" * 100)
-        for num_lookups in [100, 500, 1000]:
-            chord_result = self.benchmark_chord_lookup(10, 500, num_lookups, num_runs=3)
-            pastry_result = self.benchmark_pastry_lookup(10, 500, num_lookups, num_runs=3)
+        for num_lookups in [1000, 5000, 10000]:
+            chord_result = self.benchmark_chord_lookup(20, 1000, num_lookups, num_runs=5)
+            pastry_result = self.benchmark_pastry_lookup(20, 1000, num_lookups, num_runs=5)
             
             print(f"{num_lookups:<10}{'Chord':<15}{chord_result['mean']:<15.4f}{chord_result['median']:<15.4f}{chord_result['stdev']:<15.4f}{chord_result['avg_per_lookup']:<15.6f}")
             print(f"{'':<10}{'Pastry':<15}{pastry_result['mean']:<15.4f}{pastry_result['median']:<15.4f}{pastry_result['stdev']:<15.4f}{pastry_result['avg_per_lookup']:<15.6f}")

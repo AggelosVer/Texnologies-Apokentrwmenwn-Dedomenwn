@@ -93,9 +93,9 @@ class ChordHopAnalyzer:
 if __name__ == "__main__":
     analyzer = ChordHopAnalyzer(m_bits=160)
     
-    sizes = [1000, 5000, 10000, 25000, 50000, 75000, 100000]
+    sizes = [1000, 10000, 50000, 100000, 150000, 200000]
     
-    results = analyzer.run_analysis(sizes, num_nodes=20, num_lookups=100)
+    results = analyzer.run_analysis(sizes, num_nodes=40, num_lookups=200)
     
     with open('chord_hop_results.json', 'w') as f:
         json.dump(results, f, indent=2)

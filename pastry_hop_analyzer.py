@@ -72,9 +72,8 @@ class PastryHopAnalyzer:
 if __name__ == "__main__":
     analyzer = PastryHopAnalyzer(m_bits=160, b=4, l=16, m=32)
     
-    sizes = [1000, 5000, 10000, 25000, 50000, 75000, 100000]
-    
-    results = analyzer.run_analysis(sizes, num_nodes=20, num_lookups=100)
+    sizes = [1000, 10000, 50000, 100000, 150000, 200000]
+    results = analyzer.run_analysis(sizes, num_nodes=40, num_lookups=200)
     
     with open('pastry_hop_results.json', 'w') as f:
         json.dump(results, f, indent=2)
