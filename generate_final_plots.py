@@ -46,8 +46,9 @@ def generate_performance_plots(csv_file='chord_vs_pastry_comparison.csv'):
             proto_df = op_df[op_df['protocol'] == protocol]
             plt.plot(proto_df['parameter'], proto_df['mean'], 'o-', label=protocol, linewidth=2.5, markersize=8)
             
-        plt.title(f'Scaling: {op.capitalize()} Performance', fontsize=16, fontweight='bold')
-        plt.xlabel('Parameter (Nodes/Items)', fontsize=12)
+        plt.title(f'Scaling: {op.replace("_", " ").capitalize()} Performance', fontsize=16, fontweight='bold')
+        xlabel = 'Number of Nodes' if op == 'build' else 'Number of Operations / Items'
+        plt.xlabel(xlabel, fontsize=12)
         plt.ylabel('Mean Time (s)', fontsize=12)
         plt.legend(fontsize=12)
         plt.grid(True, alpha=0.3)
