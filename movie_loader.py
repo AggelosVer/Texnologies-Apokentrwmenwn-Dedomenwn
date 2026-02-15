@@ -4,21 +4,20 @@ from typing import List, Dict, Optional, Tuple
 import ast
 
 def load_movies_dataset(filepath: str = 'data_movies_clean.csv') -> pd.DataFrame:
-    # Use latin-1 encoding for broader character support and skip bad lines
-    # Use utf-8-sig to handle potential BOM and latin-1 fallback
+
     try:
         df = pd.read_csv(filepath, low_memory=False, on_bad_lines='skip', encoding='utf-8-sig')
     except UnicodeDecodeError:
         df = pd.read_csv(filepath, low_memory=False, on_bad_lines='skip', encoding='latin-1')
     
-    # Clean column names (handle trailing delimiters like ;;; and potential BOM/spaces)
+
     df.columns = [col.strip().split(';')[0] if isinstance(col, str) else col for col in df.columns]
     
-    # Ensure 'id' exists even if it was renamed by BOM
+
     if 'ï»¿id' in df.columns:
         df = df.rename(columns={'ï»¿id': 'id'})
     
-    # Coerce numeric columns to handle mixed types in full dataset
+
     numeric_cols = ['budget', 'revenue', 'runtime', 'vote_average']
     for col in numeric_cols:
         if col in df.columns:

@@ -19,7 +19,6 @@ def main():
         "benchmark_concurrency.py",
         "compare_performance.py",
         "generate_final_plots.py",
-        "benchmark_tcp_network.py",
         "demo_dht.py"
     ]
 
