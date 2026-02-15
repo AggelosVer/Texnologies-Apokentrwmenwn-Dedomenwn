@@ -17,6 +17,7 @@ def main():
         "plot_pastry_hops.py",
         "test_visualization.py",
         "benchmark_concurrency.py",
+        "benchmark_concurrency_pastry.py",
         "compare_performance.py",
         "generate_final_plots.py",
         "demo_dht.py"

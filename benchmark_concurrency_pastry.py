@@ -1,6 +1,7 @@
 import time
 import json
 import random
+import matplotlib.pyplot as plt
 from typing import List, Dict, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
@@ -58,23 +59,25 @@ class ConcurrentPastryLookup:
         return results
 
 def run_benchmark():
-    print("Initializing Pastry Network (20 nodes) for concurrency benchmark...")
+    print("Initializing Pastry Network (40 nodes) for concurrency benchmark...")
     mapper = MoviePastryMapper()
-    mapper.create_pastry_network(20)
+    mapper.create_pastry_network(40)
     
-    # Generate some dummy movie data
-    movies = []
-    for i in range(200):
-        movies.append({'title': f"Movie_{i}", 'popularity': random.uniform(0, 100)})
-        mapper.insert_movie(movies[-1]['title'], movies[-1])
+    # Generate movie data
+    _, movies = get_movie_sample(n_samples=2000)
+    print(f"Loaded {len(movies)} real movies for benchmark.")
+    
+    for movie in movies:
+        mapper.insert_movie(movie['title'], movie)
+    print(f"Inserted {len(movies)} movies into Pastry.")
     
     all_titles = [m['title'] for m in movies]
-    k_values = [1, 5, 10, 20, 50, 100]
+    k_values = [1, 10, 50, 100, 200, 500]
     results = []
     
     lookup_engine = ConcurrentPastryLookup(mapper, max_workers=20)
     
-    print("\nStarting Pastry Concurrency Benchmark...")
+    print("\nStarting Pastry Concurrency Benchmark (K-Movie Popularity)...")
     print(f"{'K':<10}{'Total Time (s)':<20}{'Avg Time/Lookup (s)':<20}")
     print("-" * 50)
     
@@ -85,28 +88,48 @@ def run_benchmark():
         total_time = time.time() - start_time
         avg_time = total_time / k
         
-        print(f"{k:<10}{total_time:<20.4f}{avg_time:<20.4f}")
-        results.append({'k': k, 'total_time': total_time, 'avg_time': avg_time})
+        print(f"{k:<10}{total_time:<20.4f}{avg_time:<20.4f}", flush=True)
+        results.append({
+            'k': k, 
+            'total_time': total_time, 
+            'avg_time': avg_time,
+            'success_rate': lookup_engine.stats['successful'] / k
+        })
+        # Reset stats for next batch
+        lookup_engine.stats['successful'] = 0
         
-    # Plotting
-    import matplotlib.pyplot as plt
-    plt.figure(figsize=(10, 6))
-    plt.plot([r['k'] for r in results], [r['avg_time'] for r in results], 'ro-', linewidth=2, markersize=8)
-    plt.title("Concurrent Pastry Movie Lookup: Avg Time per Lookup vs. K", fontsize=14, fontweight='bold')
-    plt.xlabel("Number of Movies (K)", fontsize=12)
-    plt.ylabel("Average Latency (s)", fontsize=12)
-    plt.grid(True, alpha=0.3)
-    plt.savefig('instances/pastry_concurrency_avg.png')
+    # Plotting styles - Matching Chord benchmark aesthetics
+    plt.style.use('bmh')
     
+    # Plot 1: Average Latency vs K
     plt.figure(figsize=(10, 6))
-    plt.plot([r['k'] for r in results], [r['total_time'] for r in results], 'yo-', linewidth=2, markersize=8)
-    plt.title("Concurrent Pastry Movie Lookup: Total Time vs. K", fontsize=14, fontweight='bold')
-    plt.xlabel("Number of Movies (K)", fontsize=12)
+    plt.plot([r['k'] for r in results], [r['avg_time'] for r in results], 
+             'ro-', linewidth=2.5, markersize=8, label='Pastry Latency')
+    plt.title("Concurrent Pastry Movie Lookup: Avg Latency", fontsize=14, fontweight='bold')
+    plt.xlabel("Number of Concurrent Lookups (K)", fontsize=12)
+    plt.ylabel("Average Time per Lookup (s)", fontsize=12)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend()
+    plt.savefig('instances/pastry_concurrency_avg.png', dpi=300)
+    
+    # Plot 2: Total Execution Time vs K
+    plt.figure(figsize=(10, 6))
+    plt.plot([r['k'] for r in results], [r['total_time'] for r in results], 
+             'yo-', linewidth=2.5, markersize=8, label='Pastry Total Time')
+    plt.title("Concurrent Pastry Movie Lookup: Total Throughput", fontsize=14, fontweight='bold')
+    plt.xlabel("Number of Concurrent Lookups (K)", fontsize=12)
     plt.ylabel("Total Execution Time (s)", fontsize=12)
-    plt.grid(True, alpha=0.3)
-    plt.savefig('instances/pastry_concurrency_total.png')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend()
+    plt.savefig('instances/pastry_concurrency_total.png', dpi=300)
     
+    with open('pastry_concurrency_results.json', 'w') as f:
+        json.dump(results, f, indent=4)
+        
     print("\nPastry Concurrency plots saved to 'instances/'")
+    print("Results saved to pastry_concurrency_results.json")
+    print("Benchmark complete.", flush=True)
 
 if __name__ == "__main__":
+    from movie_loader import get_movie_sample
     run_benchmark()
