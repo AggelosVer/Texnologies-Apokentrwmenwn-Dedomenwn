@@ -80,7 +80,7 @@ class Message:
         except ValueError:
             msg_type = msg_type_str
         
-        return cls(
+        instance = cls(
             msg_type=msg_type,
             sender_address=data['sender_address'],
             receiver_address=data['receiver_address'],
@@ -88,6 +88,13 @@ class Message:
             payload=data.get('payload', {}),
             timestamp=data.get('timestamp')
         )
+        
+        if msg_type == MessageType.RESPONSE:
+            instance.__class__ = ResponseMessage
+        else:
+            instance.__class__ = RequestMessage
+            
+        return instance
     
     @classmethod
     def from_json(cls, json_str: str) -> 'Message':

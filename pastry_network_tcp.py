@@ -220,7 +220,7 @@ class RemotePastryNode:
         except:
             return {}
     
-    def route(self, key_id: int, hops: int = 0) -> Tuple['RemotePastryNode', int]:
+    def route(self, key_id: int, hops: int = 0, visited: Optional[set] = None) -> Tuple['RemotePastryNode', int]:
         result = self.local_node.send_request(
             self.address,
             MessageType.ROUTE,

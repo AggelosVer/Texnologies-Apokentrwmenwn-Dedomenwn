@@ -245,9 +245,9 @@ class NetworkNodeTCP:
         for attempt in range(actual_retries + 1):
             try:
                 request = create_request(
-                    operation=operation,
-                    sender_address=self.address,
-                    receiver_address=target_address,
+                    operation,
+                    self.address,
+                    target_address,
                     *args,
                     **kwargs
                 )
