@@ -80,21 +80,36 @@ class Message:
         except ValueError:
             msg_type = msg_type_str
         
-        instance = cls(
+        if msg_type == MessageType.RESPONSE:
+            payload = data.get('payload', {})
+            return ResponseMessage(
+                sender_address=data['sender_address'],
+                receiver_address=data['receiver_address'],
+                request_id=data.get('request_id'),
+                result=payload.get('result'),
+                success=payload.get('success', True),
+                error=payload.get('error')
+            )
+        
+        payload = data.get('payload', {})
+        if 'operation' in payload:
+            return RequestMessage(
+                operation=msg_type,
+                sender_address=data['sender_address'],
+                receiver_address=data['receiver_address'],
+                args=payload.get('args', []),
+                kwargs=payload.get('kwargs', {}),
+                request_id=data.get('request_id')
+            )
+
+        return cls(
             msg_type=msg_type,
             sender_address=data['sender_address'],
             receiver_address=data['receiver_address'],
             request_id=data.get('request_id'),
-            payload=data.get('payload', {}),
+            payload=payload,
             timestamp=data.get('timestamp')
         )
-        
-        if msg_type == MessageType.RESPONSE:
-            instance.__class__ = ResponseMessage
-        else:
-            instance.__class__ = RequestMessage
-            
-        return instance
     
     @classmethod
     def from_json(cls, json_str: str) -> 'Message':

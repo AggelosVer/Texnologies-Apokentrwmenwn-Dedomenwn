@@ -26,11 +26,14 @@ class MovieDHTMapper:
             nodes[i].join(introducer, init_fingers=True, transfer_data=True)
         
         print("Stabilizing ring and populating finger tables...")
-        for _ in range(5):
+        for _ in range(30):
             for node in nodes:
                 node.stabilize()
-                for _ in range(20):
+                node.check_predecessor()
+                for _ in range(10):
                     node.fix_fingers()
+            import time
+            time.sleep(0.05)
         
         self.nodes = nodes
         return nodes
@@ -205,7 +208,7 @@ class MovieDHTMapper:
     
     def print_mapping_report(self, max_entries: int = 20):
         print("\n" + "=" * 100)
-        print("MOVIE TITLE → DHT KEY MAPPING REPORT")
+        print("MOVIE TITLE -> DHT KEY MAPPING REPORT")
         print("=" * 100)
         
         print(f"\nTotal mappings: {len(self.movie_key_mappings)}")
@@ -250,7 +253,7 @@ class MovieDHTMapper:
         for node_address, count in stats['node_distribution'].items():
             percentage = (count / stats['success'] * 100) if stats['success'] > 0 else 0
             bar_length = int(percentage / 2)
-            bar = '█' * bar_length
+            bar = '#' * bar_length
             print(f"{node_address:20s}: {count:3d} movies ({percentage:5.2f}%) {bar}")
     
     def print_sample_metadata(self, num_samples: int = 5):
@@ -318,7 +321,7 @@ def main():
     print("\n[STEP 3] Mapping movies to DHT keys...")
     movies = mapper.load_and_map_movies(movies)
     
-    print("\n[STEP 4] Displaying movie → DHT key mappings...")
+    print("\n[STEP 4] Displaying movie -> DHT key mappings...")
     mapper.print_mapping_report(max_entries=15)
     
     print("\n[STEP 5] Inserting movies into DHT...")
@@ -336,9 +339,9 @@ def main():
     print(f"\nQuerying for: '{test_title}'")
     result = mapper.query_movie(test_title)
     if result:
-        print(f"✓ Found! Popularity: {result['popularity']:.2f}, Rating: {result['rating']}/10")
+        print(f"[OK] Found! Popularity: {result['popularity']:.2f}, Rating: {result['rating']}/10")
     else:
-        print("✗ Not found")
+        print("[NOT FOUND] Not found")
     
     print("\n[STEP 8] Exporting mappings to JSON...")
     mapper.export_mappings_to_json('movie_dht_mappings.json')

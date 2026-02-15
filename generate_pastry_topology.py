@@ -10,12 +10,11 @@ def run_topology_demo():
     # Create nodes
     nodes = []
     for i in range(num_nodes):
-        # Using different ports to simulate different nodes
+        
         node = PastryNode(f"127.0.0.1", 8000 + i, m_bits=m_bits)
         nodes.append(node)
     
-    # Join nodes to form the network
-    # First node creates the network
+
     for i in range(1, num_nodes):
         nodes[i].join(nodes[0])
     
@@ -28,7 +27,6 @@ def run_topology_demo():
     print("Generating detailed routing table plot for Node 0: instances/pastry_routing_table.png")
     visualize_pastry_routing_table(nodes[0], 'instances/pastry_routing_table.png')
     
-    print("\nSuccess! Check the 'instances' folder for the images.")
 
 if __name__ == "__main__":
     run_topology_demo()

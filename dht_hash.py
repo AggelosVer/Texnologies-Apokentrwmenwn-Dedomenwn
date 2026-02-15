@@ -38,10 +38,9 @@ class DHTHasher:
     def in_range(self, identifier: int, start: int, end: int, 
                  inclusive_start: bool = False, inclusive_end: bool = True) -> bool:
         if start == end:
-            if inclusive_start and inclusive_end:
-                return True
-            else:
-                return identifier == start if (inclusive_start or inclusive_end) else False
+            if not inclusive_start and not inclusive_end:
+                return identifier != start
+            return True
         
         if start < end:
             if inclusive_start and inclusive_end:

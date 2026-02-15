@@ -82,7 +82,10 @@ class ChordHopAnalyzer:
         results = []
         
         for size in dataset_sizes:
+            print(f"Analyzing Chord with {num_nodes} nodes and {size} keys...")
             result = self.measure_hops(num_nodes, size, num_lookups)
+            print(f"  Mean hops: {result['mean_hops']:.2f}, Median: {result['median_hops']:.2f}, "
+                  f"Min: {result['min_hops']}, Max: {result['max_hops']}")
             results.append(result)
             
         return results
@@ -96,3 +99,5 @@ if __name__ == "__main__":
     
     with open('chord_hop_results.json', 'w') as f:
         json.dump(results, f, indent=2)
+    
+    print("\nResults saved to chord_hop_results.json")
