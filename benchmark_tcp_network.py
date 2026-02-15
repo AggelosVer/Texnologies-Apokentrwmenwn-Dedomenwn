@@ -110,14 +110,14 @@ def run_protocol_benchmark(protocol_name, start_port, num_nodes=5, num_operation
 
 def main():
     results = []
-
-    c = run_protocol_benchmark("chord", start_port=15000, num_nodes=4)
+    # Chord Benchmark
+    c = run_protocol_benchmark("chord", start_port=15000, num_nodes=8, num_operations=100)
     if c: results.append(c)
     
     time.sleep(2)
     
-
-    p = run_protocol_benchmark("pastry", start_port=16000, num_nodes=4)
+    # Pastry Benchmark
+    p = run_protocol_benchmark("pastry", start_port=16000, num_nodes=8, num_operations=100)
     if p: results.append(p)
     
     if results:
